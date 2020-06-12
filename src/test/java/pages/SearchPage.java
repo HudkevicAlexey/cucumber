@@ -1,41 +1,49 @@
 package pages;
 
+import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.SelenideElement;
 import org.openqa.selenium.By;
-import org.testng.Assert;
 
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.codeborne.selenide.Selenide.*;
+import static java.util.function.Predicate.isEqual;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.testng.Assert.assertEquals;
 
 public class SearchPage {
-    boolean actualHotelName;
+    By searchFieldId = By.id("ss");
+    String searchButtonCss = ".sb-searchbox__button";
+    String hotelsNameLocator = ".sr-hotel__name";
+    String hotelNameLocator = "//*[contains(text(),'%s') and contains(@class, 'sr-hotel__name')]";
+    String scoresLocator = hotelNameLocator + "/ancestor::div[contains(@class, 'sr_item')]//*[contains(@class, 'bui-review-score__badge')]";
+    String numberOfPropertiesLocator = ".sorth1";
 
-   By searchFieldId = By.id("ss");
-   String searchButtonCss = ".sb-searchbox__button";
-   String scoresLocator = "//span[contains(text(),'%s')]/ancestor::div[contains(@class, 'sr_item')]";
-   String hotelNameLocator ="//span[contains(text(),'%s')]";
     public SearchPage openPage() {
-        open("https://www.booking.com/searchresults.en-gb.html#map_closed");
-        return new SearchPage();
-
+        open("https://www.booking.com/searchresults.en-gb.html");
+        return this;
     }
 
     public SearchPage search(String hotelName) {
         $(searchFieldId).sendKeys(hotelName);
-        $(searchFieldId).click();
         $(searchButtonCss).click();
+        $(numberOfPropertiesLocator).shouldBe(Condition.visible);
         return this;
     }
 
-    public SearchPage getHotels(String hotelName) {
-        $(searchFieldId).click();
-        actualHotelName =$(By.xpath(String.format(hotelNameLocator, hotelName ))).isDisplayed();
-        return this;
+    public List<String> getHotels() {
+        List<String> hotels = new ArrayList<>();
+        for(SelenideElement element: $$(hotelsNameLocator)) {
+            hotels.add(element.getText());
+        }
+        return hotels;
+        //return $$(hotelsNameLocator).stream().map(SelenideElement::getText).collect(Collectors.toList());
     }
 
-    public void validationHotelRating(String hotelName, String hotelScore) {
-        String actualScore = $(By.xpath(String.format(scoresLocator, hotelName ))).getAttribute("data-score");
-        Assert.assertEquals(hotelScore, actualScore);
-
-
+    public void hotelRatingShouldBeCorrect(String hotelName, String hotelScore) {
+        String actualScore = $(By.xpath(String.format(scoresLocator, hotelName))).getText().trim();
+        assertThat("Рейтинг отеля некорректный", actualScore, is(hotelScore));
     }
 }
