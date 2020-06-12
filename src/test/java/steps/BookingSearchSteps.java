@@ -1,6 +1,7 @@
 package steps;
 
 import com.codeborne.selenide.Configuration;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
